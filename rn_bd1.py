@@ -1506,16 +1506,52 @@ def _attach_panels_to_RNBuilder():
 
         self.prev_box = ctk.CTkTextbox(left, height=150)
         self.prev_box.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
-        
+
         # --- MELHORIA UX: Tags de Syntax Highlighting ---
-        self.prev_box.tag_config("gatilho", ctk_font=ctk.CTkFont(weight="bold"))
-        self.prev_box.tag_config("link_se", foreground="#AAAAAA", ctk_font=ctk.CTkFont(slant="italic"))
-        self.prev_box.tag_config("condicao", foreground="#0099FF") # Azul
-        self.prev_box.tag_config("link_entao", ctk_font=ctk.CTkFont(weight="bold"))
-        self.prev_box.tag_config("acao", foreground="#00AA00") # Verde
-        self.prev_box.tag_config("link_else", foreground="#FF7700", ctk_font=ctk.CTkFont(slant="italic")) # Laranja
-        self.prev_box.tag_config("acao_else", foreground="#FF7700") # Laranja
-        self.prev_box.tag_config("ponto", foreground="#AAAAAA")
+        # CustomTkinter não permite fonts diretamente em tag_config (quebra o scaling).
+        # Para manter o destaque, guardamos as fontes e aplicamos no widget interno
+        # do tkinter quando necessário, deixando um fallback silencioso caso a API
+        # mude novamente em versões futuras.
+        self._prev_tag_fonts = {
+            "bold": ctk.CTkFont(weight="bold"),
+            "italic": ctk.CTkFont(slant="italic"),
+        }
+
+        def _configure_preview_tag(tag: str, *, font_key: str | None = None, **opts):
+            # Primeiro aplica opções compatíveis diretamente na CTkTextbox.
+            if opts:
+                try:
+                    self.prev_box.tag_config(tag, **opts)
+                except AttributeError:
+                    # Em último caso, cai para o widget interno.
+                    if hasattr(self.prev_box, "_textbox"):
+                        try:
+                            self.prev_box._textbox.tag_configure(tag, **opts)
+                        except Exception:
+                            pass
+            if font_key:
+                font_obj = self._prev_tag_fonts.get(font_key)
+                if font_obj is None:
+                    return
+                try:
+                    self.prev_box.tag_config(tag, ctk_font=font_obj)
+                except AttributeError as err:
+                    if "font" in str(err).lower() and hasattr(self.prev_box, "_textbox"):
+                        try:
+                            self.prev_box._textbox.tag_configure(tag, font=font_obj)
+                        except Exception:
+                            pass
+                    else:
+                        raise
+
+        _configure_preview_tag("gatilho", font_key="bold")
+        _configure_preview_tag("link_se", font_key="italic", foreground="#AAAAAA")
+        _configure_preview_tag("condicao", foreground="#0099FF") # Azul
+        _configure_preview_tag("link_entao", font_key="bold")
+        _configure_preview_tag("acao", foreground="#00AA00") # Verde
+        _configure_preview_tag("link_else", font_key="italic", foreground="#FF7700") # Laranja
+        _configure_preview_tag("acao_else", foreground="#FF7700") # Laranja
+        _configure_preview_tag("ponto", foreground="#AAAAAA")
         # --- FIM MELHORIA UX ---
         
         try:

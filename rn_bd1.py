@@ -1508,12 +1508,12 @@ def _attach_panels_to_RNBuilder():
         self.prev_box.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
         
         # --- MELHORIA UX: Tags de Syntax Highlighting ---
-        self.prev_box.tag_config("gatilho", ctk_font=ctk.CTkFont(weight="bold"))
-        self.prev_box.tag_config("link_se", foreground="#AAAAAA", ctk_font=ctk.CTkFont(slant="italic"))
+        self.prev_box.tag_config("gatilho", font=ctk.CTkFont(weight="bold"))
+        self.prev_box.tag_config("link_se", foreground="#AAAAAA", font=ctk.CTkFont(slant="italic"))
         self.prev_box.tag_config("condicao", foreground="#0099FF") # Azul
-        self.prev_box.tag_config("link_entao", ctk_font=ctk.CTkFont(weight="bold"))
+        self.prev_box.tag_config("link_entao", font=ctk.CTkFont(weight="bold"))
         self.prev_box.tag_config("acao", foreground="#00AA00") # Verde
-        self.prev_box.tag_config("link_else", foreground="#FF7700", ctk_font=ctk.CTkFont(slant="italic")) # Laranja
+        self.prev_box.tag_config("link_else", foreground="#FF7700", font=ctk.CTkFont(slant="italic")) # Laranja
         self.prev_box.tag_config("acao_else", foreground="#FF7700") # Laranja
         self.prev_box.tag_config("ponto", foreground="#AAAAAA")
         # --- FIM MELHORIA UX ---

@@ -1458,7 +1458,7 @@ def _attach_builder_to_RNBuilder():
 
         self._update_preview()
 
-    # _update_preview foi movido para a PARTE 6 para usar o Syntax Highlighting
+    # _update_preview foi movido para a PARTE 6 para centralizar a atualização da prévia
 
     RNBuilder._build_rule = _build_rule
     RNBuilder._reset_builder_defaults = _reset_builder_defaults
@@ -1507,53 +1507,6 @@ def _attach_panels_to_RNBuilder():
         self.prev_box = ctk.CTkTextbox(left, height=150)
         self.prev_box.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
 
-        # --- MELHORIA UX: Tags de Syntax Highlighting ---
-        # CustomTkinter não permite fonts diretamente em tag_config (quebra o scaling).
-        # Para manter o destaque, guardamos as fontes e aplicamos no widget interno
-        # do tkinter quando necessário, deixando um fallback silencioso caso a API
-        # mude novamente em versões futuras.
-        self._prev_tag_fonts = {
-            "bold": ctk.CTkFont(weight="bold"),
-            "italic": ctk.CTkFont(slant="italic"),
-        }
-
-        def _configure_preview_tag(tag: str, *, font_key: str | None = None, **opts):
-            # Primeiro aplica opções compatíveis diretamente na CTkTextbox.
-            if opts:
-                try:
-                    self.prev_box.tag_config(tag, **opts)
-                except AttributeError:
-                    # Em último caso, cai para o widget interno.
-                    if hasattr(self.prev_box, "_textbox"):
-                        try:
-                            self.prev_box._textbox.tag_configure(tag, **opts)
-                        except Exception:
-                            pass
-            if font_key:
-                font_obj = self._prev_tag_fonts.get(font_key)
-                if font_obj is None:
-                    return
-                try:
-                    self.prev_box.tag_config(tag, ctk_font=font_obj)
-                except AttributeError as err:
-                    if "font" in str(err).lower() and hasattr(self.prev_box, "_textbox"):
-                        try:
-                            self.prev_box._textbox.tag_configure(tag, font=font_obj)
-                        except Exception:
-                            pass
-                    else:
-                        raise
-
-        _configure_preview_tag("gatilho", font_key="bold")
-        _configure_preview_tag("link_se", font_key="italic", foreground="#AAAAAA")
-        _configure_preview_tag("condicao", foreground="#0099FF") # Azul
-        _configure_preview_tag("link_entao", font_key="bold")
-        _configure_preview_tag("acao", foreground="#00AA00") # Verde
-        _configure_preview_tag("link_else", font_key="italic", foreground="#FF7700") # Laranja
-        _configure_preview_tag("acao_else", foreground="#FF7700") # Laranja
-        _configure_preview_tag("ponto", foreground="#AAAAAA")
-        # --- FIM MELHORIA UX ---
-        
         try:
             self.prev_box.configure(wrap="word")
         except Exception:
@@ -1593,7 +1546,7 @@ def _attach_panels_to_RNBuilder():
             pass
 
     def _clear_preview(self: 'RNBuilder'):
-        # --- MELHORIA UX: Refatorado para limpar tags ---
+        # Limpa o texto da pré-visualização
         try:
             self.prev_box.configure(state="normal")
             self.prev_box.delete("1.0", "end")
@@ -1724,7 +1677,6 @@ def _attach_panels_to_RNBuilder():
             del self.rns[idx]
             self._refresh_textbox()
 
-    # --- MELHORIA UX: _update_preview movido e refatorado para Syntax Highlighting ---
     def _update_preview(self: 'RNBuilder'):
         try:
             # Funções de texto da PARTE 5
@@ -1736,24 +1688,27 @@ def _attach_panels_to_RNBuilder():
             # Referência ao prev_box da PARTE 6
             self.prev_box.configure(state="normal")
             self.prev_box.delete("1.0", "end")
-            
-            self.prev_box.insert("end", when, "gatilho")
+
+            preview = when or ""
 
             if cond:
                 link = " e " if (" se " in when or " Se " in when) else ", se "
-                self.prev_box.insert("end", link, "link_se")
-                self.prev_box.insert("end", cond, "condicao")
-            
+                preview += (link if preview else "") + cond
+
             if acoes:
-                self.prev_box.insert("end", ", ", "link_entao")
-                self.prev_box.insert("end", acoes, "acao")
-            
-            self.prev_box.insert("end", ".", "ponto")
+                preview += (", " if preview else "") + acoes
+
+            if preview:
+                preview += "."
 
             if else_part:
-                self.prev_box.insert("end", f" {_t('else_label')}, ", "link_else")
-                self.prev_box.insert("end", else_part, "acao_else")
-                self.prev_box.insert("end", ".", "ponto")
+                prefix = f" {_t('else_label')}, " if preview else f"{_t('else_label')}, "
+                preview += prefix + else_part + "."
+
+            if not preview:
+                preview = ""
+
+            self.prev_box.insert("end", preview)
 
         except Exception as e:
             # Firewall

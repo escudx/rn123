@@ -743,9 +743,9 @@ class RNBuilder(ctk.CTk):
 
         self.content = ctk.CTkFrame(self, fg_color="transparent")
         self.content.grid(row=1, column=0, sticky="nsew")
-        self.content.grid_columnconfigure(0, weight=1)
-        self.content.grid_rowconfigure(0, weight=3)
-        self.content.grid_rowconfigure(1, weight=2, minsize=280)
+        self.content.grid_rowconfigure(0, weight=1)
+        self.content.grid_columnconfigure(0, weight=9, minsize=420)
+        self.content.grid_columnconfigure(1, weight=11, minsize=520)
 
         self._bind_shortcuts()
 
@@ -1136,21 +1136,22 @@ def _attach_builder_to_RNBuilder():
     def _build_rule(self: 'RNBuilder'):
         parent = getattr(self, "content", self)
         self.builder_scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
-        self.builder_scroll.grid(row=0, column=0, sticky="nsew", padx=10, pady=6)
+        self.builder_scroll.grid(row=0, column=1, sticky="nsew", padx=(6, 10), pady=6)
         self.builder_scroll.grid_columnconfigure(0, weight=1)
 
         self.builder_container = scrollable_body(self.builder_scroll)
-        for col in range(3):
-            self.builder_container.grid_columnconfigure(col, weight=1, uniform="builder")
-        self.builder_container.grid_rowconfigure(0, weight=1)
+        self.builder_container.grid_columnconfigure(0, weight=1)
+        self.builder_container.grid_rowconfigure(0, weight=5)
+        self.builder_container.grid_rowconfigure(1, weight=4)
+        self.builder_container.grid_rowconfigure(2, weight=6)
 
         frm_gatilho_group = group(
             self.builder_container,
             "Gatilho",
             row=0,
             col=0,
-            padx=(0, 6),
-            pady=0,
+            padx=(0, 0),
+            pady=(0, 10),
             sticky="nsew",
         )
         frm_gatilho_group.grid_columnconfigure(0, weight=1)
@@ -1182,10 +1183,10 @@ def _attach_builder_to_RNBuilder():
         frm_cond_group = group(
             self.builder_container,
             "Condições adicionais",
-            row=0,
-            col=1,
-            padx=6,
-            pady=0,
+            row=1,
+            col=0,
+            padx=(0, 0),
+            pady=(0, 10),
             sticky="nsew",
         )
         frm_cond_group.grid_columnconfigure(0, weight=1)
@@ -1213,7 +1214,7 @@ def _attach_builder_to_RNBuilder():
             command=self._update_preview,
         ).grid(row=1, column=1, sticky="w", pady=(4, 0), padx=(12, 0))
 
-        self.frm_conds = ctk.CTkScrollableFrame(frm_cond_group, fg_color="transparent", height=300)
+        self.frm_conds = ctk.CTkScrollableFrame(frm_cond_group, fg_color="transparent", height=240)
         self.frm_conds.grid(row=1, column=0, sticky="nsew", padx=6)
         self.frm_conds.grid_columnconfigure(0, weight=1)
         self.frm_conds_body = scrollable_body(self.frm_conds)
@@ -1238,16 +1239,16 @@ def _attach_builder_to_RNBuilder():
         frm_acao_group = group(
             self.builder_container,
             "Ações (então) e Ações Frequentes",
-            row=0,
-            col=2,
-            padx=(6, 0),
-            pady=0,
+            row=2,
+            col=0,
+            padx=(0, 0),
+            pady=(0, 0),
             sticky="nsew",
         )
         frm_acao_group.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(frm_acao_group, text="Ações (então):").grid(row=0, column=0, padx=6, pady=(6,2), sticky="w")
-        self.frm_acoes = ctk.CTkScrollableFrame(frm_acao_group, fg_color="transparent", height=300)
+        self.frm_acoes = ctk.CTkScrollableFrame(frm_acao_group, fg_color="transparent", height=260)
         self.frm_acoes.grid(row=1, column=0, sticky="nsew", padx=6)
         self.frm_acoes.grid_columnconfigure(0, weight=1)
         self.frm_acoes_body = scrollable_body(self.frm_acoes)
@@ -1701,20 +1702,30 @@ def _attach_panels_to_RNBuilder():
     def _build_panels(self: 'RNBuilder'):
         parent = getattr(self, "content", self)
         container = ctk.CTkFrame(parent)
-        container.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        container.grid(row=0, column=0, sticky="nsew", padx=(10, 6), pady=6)
         container.grid_columnconfigure(0, weight=1)
-        container.grid_columnconfigure(1, weight=3)
-        container.grid_rowconfigure(0, weight=1)
+        container.grid_rowconfigure(0, weight=4)
+        container.grid_rowconfigure(1, weight=5)
 
-        left = group(container, "Pré-visualização da RN atual", row=0, col=0, padx=(0, 6), pady=0, sticky="nsew")
-        left_btnbar = ctk.CTkFrame(left, fg_color="transparent")
+        preview_group = group(
+            container,
+            "Pré-visualização da RN atual",
+            row=0,
+            col=0,
+            padx=(0, 0),
+            pady=(0, 8),
+            sticky="nsew",
+        )
+        preview_group.grid_rowconfigure(1, weight=1)
+
+        left_btnbar = ctk.CTkFrame(preview_group, fg_color="transparent")
         left_btnbar.grid(row=0, column=0, sticky="w", padx=0, pady=(0, 6))
         ctk.CTkButton(left_btnbar, text="Adicionar RN", command=self._add_rn, width=160).pack(side="left", padx=(0, 6))
         ctk.CTkButton(left_btnbar, text="Adicionar RN e preparar oposto (Sim/Não)",
                       command=self._add_rn_and_prepare_opposite, width=300).pack(side="left", padx=(0, 6))
         ctk.CTkButton(left_btnbar, text="Limpar pré-visualização", command=self._clear_preview, width=200).pack(side="left")
 
-        self.prev_box = SafeCTkTextbox(left, height=200)
+        self.prev_box = SafeCTkTextbox(preview_group, height=200)
         self.prev_box.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
 
         try:
@@ -1722,22 +1733,30 @@ def _attach_panels_to_RNBuilder():
         except Exception:
             pass
 
-        right = group(container, "RNs (lista final)", row=0, col=1, padx=(6, 0), pady=0, sticky="nsew")
-        right.grid_rowconfigure(1, weight=2)
-        right.grid_rowconfigure(2, weight=3)
+        rn_group = group(
+            container,
+            "RNs (lista final)",
+            row=1,
+            col=0,
+            padx=(0, 0),
+            pady=(0, 0),
+            sticky="nsew",
+        )
+        rn_group.grid_rowconfigure(1, weight=1)
+        rn_group.grid_rowconfigure(2, weight=1)
 
-        right_btnbar = ctk.CTkFrame(right, fg_color="transparent")
+        right_btnbar = ctk.CTkFrame(rn_group, fg_color="transparent")
         right_btnbar.grid(row=0, column=0, sticky="w", padx=0, pady=(0, 6))
         ctk.CTkButton(right_btnbar, text="Copiar RN", command=self._copy_single_rn, width=120).pack(side="left", padx=(0, 6))
         ctk.CTkButton(right_btnbar, text="Copiar tudo", command=self._copy_all, width=110).pack(side="left", padx=(0, 6))
         ctk.CTkButton(right_btnbar, text="Salvar .txt", command=self._save_txt, width=110).pack(side="left", padx=(0, 6))
         ctk.CTkButton(right_btnbar, text="Limpar RNs", command=lambda: self._clear_rns(confirm=True), width=110).pack(side="left")
 
-        self.rn_mgr = ctk.CTkScrollableFrame(right, height=220)
+        self.rn_mgr = ctk.CTkScrollableFrame(rn_group, height=220)
         self.rn_mgr.grid(row=1, column=0, sticky="nsew", padx=0, pady=(0, 6))
         self.rn_mgr.grid_columnconfigure(0, weight=1)
 
-        self.txt = ctk.CTkTextbox(right, height=200)
+        self.txt = ctk.CTkTextbox(rn_group, height=200)
         self.txt.grid(row=2, column=0, sticky="nsew", padx=0, pady=0)
         try:
             self.txt.configure(wrap="word")

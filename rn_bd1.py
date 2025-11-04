@@ -78,7 +78,6 @@ TR = {
         "when_task_field_answer": "Na conclusão da tarefa {task}, se o campo {field} for respondido com {answer}",
         "when_task_done": "Concluída a tarefa {task}",
         "when_after_event": "Após {event}",
-        "else_label": "No contrário",
         "action_task": "é acionada a tarefa {task}",
         "action_resp": ", de responsabilidade do {resp}",
         "action_flow": "deverá ser acionado o fluxo de {flow}",
@@ -107,7 +106,6 @@ TR = {
         "when_task_field_answer": "En la conclusión de la tarea {task}, si el campo {field} se responde con {answer}",
         "when_task_done": "Concluida la tarea {task}",
         "when_after_event": "Después de {event}",
-        "else_label": "En caso contrario",
         "action_task": "se activa la tarea {task}",
         "action_resp": ", a cargo de {resp}",
         "action_flow": "deberá activarse el flujo de {flow}",
@@ -225,14 +223,12 @@ def _acao_encerramento(parcial: bool) -> str:
     # A string agora é uma frase completa, com voz passiva: "o fluxo é encerrado..."
     return _t("closing_partial") if parcial else _t("closing_total")
 
-def _compose_rn(idx: int, when: str, cond: str, acoes: str, else_txt: str | None = None) -> str:
+def _compose_rn(idx: int, when: str, cond: str, acoes: str) -> str:
     linha = f"RN{idx}: {when}"
     if cond:
         link = "e " if (" se " in when or " Se " in when) else "se "
         linha += f", {link}{cond}"
     linha += f", {acoes}." if acoes else "."
-    if else_txt:
-        linha += f" {_t('else_label')}, {else_txt}."
     return linha
 
 
@@ -391,7 +387,7 @@ class LinhaAcao(ctk.CTkFrame):
         super().__init__(master)
         self.on_change = on_change
         self.on_remove = on_remove
-        self.row_list_key = row_list_key # Usado para reordenar app.acao_rows ou app.else_rows
+        self.row_list_key = row_list_key # Usado para reordenar a lista de ações no app
 
         self.var_tipo = tk.StringVar(value="Acionar Tarefa")
 
@@ -424,9 +420,9 @@ class LinhaAcao(ctk.CTkFrame):
         btn_frame.grid(row=0, column=99, padx=3, pady=3)
 
         app = self.winfo_toplevel()
-        # Pega app.acao_rows ou app.else_rows baseado no row_list_key
+        # Pega a lista de ações correspondente no app (ex.: app.acao_rows)
         row_list = getattr(app, self.row_list_key, []) 
-        frame_parent = self.master # é o frm_acoes ou frm_else
+        frame_parent = self.master # container onde as ações são exibidas
         
         ctk.CTkButton(btn_frame, text="↑", width=28, 
                       command=lambda: app._move_row(self, -1, row_list, frame_parent))\
@@ -675,10 +671,6 @@ class RNBuilder(ctk.CTk):
         self._field_combos: list = []
         self._mem_guard = False
 
-        self.var_cliente = tk.StringVar()
-        self.var_area    = tk.StringVar()
-        self.var_fluxo   = tk.StringVar()
-
         self.var_resp_preset = tk.StringVar(value="Escritório Externo")
         self.var_resp_preset_free = tk.StringVar()
 
@@ -802,85 +794,84 @@ class RNBuilder(ctk.CTk):
 
     # Cabeçalho
     def _build_header(self):
-        frm = group(self, "Cabeçalho (opcional)", row=0)
+        header = ctk.CTkFrame(self, fg_color="transparent")
+        header.grid(row=0, column=0, sticky="we", padx=10, pady=(10, 6))
+        header.grid_columnconfigure(0, weight=1)
 
-        for c in range(9):
-            frm.grid_columnconfigure(c, weight=0)
-        frm.grid_columnconfigure(8, weight=1)  # espaçador
-        for c in (9, 10, 11, 12):
-            frm.grid_columnconfigure(c, weight=0)
+        button_bar = ctk.CTkFrame(header, fg_color="transparent")
+        button_bar.grid(row=0, column=0, sticky="we")
 
-        # Linha 0 — campos
-        ctk.CTkLabel(frm, text="Cliente:").grid(row=0, column=0, padx=6, pady=6, sticky="w")
-        ctk.CTkEntry(frm, textvariable=self.var_cliente, width=220).grid(row=0, column=1, padx=6, pady=6)
+        actions_bar = ctk.CTkFrame(button_bar, fg_color="transparent")
+        actions_bar.pack(side="left", fill="x", expand=True)
+        for text, cmd, width in (
+            ("Limpar construtor", self._clear_builder, 150),
+            ("Gerenciar Listas", self._open_mem_manager, 160),
+            ("Limpar memórias", self._clear_memories, 150),
+            ("Reset geral", self._reset_all, 140),
+        ):
+            ctk.CTkButton(actions_bar, text=text, command=cmd, width=width).pack(side="left", padx=(0, 8), pady=4)
 
-        ctk.CTkLabel(frm, text="Área:").grid(row=0, column=2, padx=6, pady=6, sticky="w")
-        ctk.CTkEntry(frm, textvariable=self.var_area, width=220).grid(row=0, column=3, padx=6, pady=6)
+        more_bar = ctk.CTkFrame(button_bar, fg_color="transparent")
+        more_bar.pack(side="right")
+        ctk.CTkLabel(more_bar, text="Idioma:").pack(side="left", padx=(0, 6))
+        ctk.CTkOptionMenu(
+            more_bar,
+            values=["Português", "Español"],
+            variable=self._lang_var,
+            width=120,
+            command=self._on_change_lang,
+        ).pack(side="left", padx=(0, 12))
 
-        ctk.CTkLabel(frm, text="Fluxo:").grid(row=0, column=4, padx=6, pady=6, sticky="w")
-        ctk.CTkEntry(frm, textvariable=self.var_fluxo, width=220).grid(row=0, column=5, padx=6, pady=6)
+        self._more_btn = ctk.CTkButton(more_bar, text="Mais...", command=self._open_more_menu, width=140)
+        self._more_btn.pack(side="left")
 
-        # Linha 1 — esquerda: responsável padrão
-        ctk.CTkLabel(frm, text="Responsável padrão (novas ações):")\
-            .grid(row=1, column=0, padx=6, pady=6, sticky="w")
+        config_row = ctk.CTkFrame(header, fg_color="transparent")
+        config_row.grid(row=1, column=0, sticky="we", pady=(6, 0))
+        config_row.grid_columnconfigure(2, weight=1)
+
+        start_frame = ctk.CTkFrame(config_row, fg_color="transparent")
+        start_frame.grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(start_frame, text="RN inicial:").pack(side="left", padx=(0, 6))
+        self.spin_start = IntSpin(start_frame, from_=1, to=999, width=110, variable=self.start_idx)
+        self.spin_start.pack(side="left")
+        def _sync_start(*_):
+            try:
+                value = int(self.start_idx.get())
+            except Exception:
+                value = 1
+            self.spin_start.entry.delete(0, "end")
+            self.spin_start.entry.insert(0, str(value))
+        self.start_idx.trace_add("write", lambda *a: _sync_start())
+        _sync_start()
+
+        resp_frame = ctk.CTkFrame(config_row, fg_color="transparent")
+        resp_frame.grid(row=0, column=1, sticky="w", padx=(20, 0))
+        ctk.CTkLabel(resp_frame, text="Responsável padrão (novas ações):").pack(side="left")
 
         cb = ctk.CTkComboBox(
-            frm,
+            resp_frame,
             values=["Escritório Externo", "Jurídico Interno", "Texto livre…"],
             variable=self.var_resp_preset,
             width=220,
         )
-        cb.grid(row=1, column=1, padx=6, pady=6, sticky="w")
+        cb.pack(side="left", padx=(6, 0))
 
         self.entry_resp_preset_free = ctk.CTkEntry(
-            frm, textvariable=self.var_resp_preset_free, width=220
+            resp_frame, textvariable=self.var_resp_preset_free, width=220
         )
 
         def _toggle_preset_free(*_):
             if self.var_resp_preset.get() == "Texto livre…":
-                self.entry_resp_preset_free.grid(row=1, column=2, padx=6, pady=6, sticky="w")
+                self.entry_resp_preset_free.pack(side="left", padx=(6, 0))
             else:
                 self.var_resp_preset_free.set("")
                 try:
-                    self.entry_resp_preset_free.grid_remove()
+                    self.entry_resp_preset_free.pack_forget()
                 except Exception:
                     pass
 
         cb.configure(command=_toggle_preset_free)
         _toggle_preset_free()
-
-        # Direita: frame com 2 linhas (evita "estourar")
-        right = ctk.CTkFrame(frm, fg_color="transparent")
-        right.grid(row=1, column=9, columnspan=4, sticky="ne", padx=(0, 12), pady=(6, 0))
-        for c in range(5): # --- MELHORIA UX: Aumentado para 5 colunas
-            right.grid_columnconfigure(c, weight=0)
-
-        # Linha 1: Idioma | Limpar construtor | Gerenciar Listas | Limpar memórias
-        ctk.CTkLabel(right, text="Idioma:").grid(row=0, column=0, padx=(0, 6), pady=2, sticky="e")
-        ctk.CTkOptionMenu(
-            right,
-            values=["Português", "Español"],
-            variable=self._lang_var,
-            width=120,
-            command=self._on_change_lang
-        ).grid(row=0, column=1, padx=(0, 10), pady=2, sticky="w")
-
-        ctk.CTkButton(right, text="Limpar construtor", command=self._clear_builder, width=150)\
-            .grid(row=0, column=2, padx=(0, 8), pady=2, sticky="e")
-        
-        # --- MELHORIA UX: Novo botão "Gerenciar Listas" ---
-        ctk.CTkButton(right, text="Gerenciar Listas", command=self._open_mem_manager, width=150)\
-            .grid(row=0, column=3, padx=(0, 8), pady=2, sticky="e")
-        
-        ctk.CTkButton(right, text="Limpar memórias", command=self._clear_memories, width=150)\
-            .grid(row=0, column=4, padx=0, pady=2, sticky="e")
-
-        # Linha 2: Reset geral | Mais...
-        ctk.CTkButton(right, text="Reset geral", command=self._reset_all, width=150)\
-            .grid(row=1, column=3, padx=(0, 8), pady=(6, 2), sticky="e") # Movido para col 3
-
-        self._more_btn = ctk.CTkButton(right, text="Mais...", command=self._open_more_menu, width=150) # Aumentado
-        self._more_btn.grid(row=1, column=4, padx=0, pady=(6, 2), sticky="e") # Movido para col 4
 
     def _on_change_lang(self, _choice: str):
         val = self._lang_var.get()
@@ -931,12 +922,11 @@ class RNBuilder(ctk.CTk):
         messagebox.showinfo("Sobre", "Criado por Rodrigo Salvador Escudero")
 
     def _clear_header(self):
-        self.var_cliente.set(""); self.var_area.set(""); self.var_fluxo.set("")
         self.start_idx.set(1)
         self.var_resp_preset.set("Escritório Externo")
         self.var_resp_preset_free.set("")
         try:
-            self.entry_resp_preset_free.grid_remove()
+            self.entry_resp_preset_free.pack_forget()
         except Exception:
             pass
 
@@ -945,7 +935,6 @@ class RNBuilder(ctk.CTk):
             if hasattr(self, "_destroy_rows"):
                 self._destroy_rows(getattr(self, "cond_rows", []))
                 self._destroy_rows(getattr(self, "acao_rows", []))
-                self._destroy_rows(getattr(self, "else_rows", []))
             if hasattr(self, "_update_preview"):
                 self._update_preview()
         except Exception:
@@ -970,12 +959,9 @@ class RNBuilder(ctk.CTk):
     # Persistência
     def _collect_project(self) -> dict:
         proj = {
-            "version": 3,
+            "version": 4,
             "lang": get_lang(),
             "header": {
-                "cliente": self.var_cliente.get(),
-                "area": self.var_area.get(),
-                "fluxo": self.var_fluxo.get(),
                 "start_idx": int(self.start_idx.get()),
                 "resp_preset": self.var_resp_preset.get(),
                 "resp_preset_free": self.var_resp_preset_free.get(),
@@ -998,17 +984,14 @@ class RNBuilder(ctk.CTk):
             self._lang_var.set("Español" if lang == "es" else "Português")
 
             header = proj.get("header", {})
-            self.var_cliente.set(header.get("cliente", ""))
-            self.var_area.set(header.get("area", ""))
-            self.var_fluxo.set(header.get("fluxo", ""))
             self.start_idx.set(int(header.get("start_idx", 1)))
             self.var_resp_preset.set(header.get("resp_preset", "Escritório Externo"))
             self.var_resp_preset_free.set(header.get("resp_preset_free", ""))
             if self.var_resp_preset.get() == "Texto livre…":
-                self.entry_resp_preset_free.grid(row=1, column=2, padx=6, pady=6, sticky="w")
+                self.entry_resp_preset_free.pack(side="left", padx=(6, 0))
             else:
                 try:
-                    self.entry_resp_preset_free.grid_remove()
+                    self.entry_resp_preset_free.pack_forget()
                 except Exception:
                     pass
 
@@ -1077,32 +1060,21 @@ class RNBuilder(ctk.CTk):
 
 def _attach_builder_to_RNBuilder():
     def _build_rule(self: 'RNBuilder'):
-        # --- MELHORIA UX: Substituído ScrollFrame por CTkTabview ---
-        # self.sf = ScrollFrame(self, height=300)
-        # self.sf.grid(row=1, column=0, sticky="nsew", padx=10, pady=6)
-        
-        self.tab_view = ctk.CTkTabview(self)
-        self.tab_view.grid(row=1, column=0, sticky="nsew", padx=10, pady=6)
-        
-        tab_names = ["1. Gatilho", "2. Condições (SE)", "3. Ações (ENTÃO)", "4. Ações (SENÃO)"]
-        for name in tab_names:
-            self.tab_view.add(name)
-            tab = self.tab_view.tab(name)
-            tab.grid_rowconfigure(0, weight=1)
-            tab.grid_columnconfigure(0, weight=1)
+        self.builder_container = ctk.CTkFrame(self)
+        self.builder_container.grid(row=1, column=0, sticky="nsew", padx=10, pady=6)
+        for col in range(3):
+            self.builder_container.grid_columnconfigure(col, weight=1, uniform="builder")
+        self.builder_container.grid_rowconfigure(0, weight=1)
 
-        tab_gatilho = self.tab_view.tab("1. Gatilho")
-        tab_conds   = self.tab_view.tab("2. Condições (SE)")
-        tab_acoes   = self.tab_view.tab("3. Ações (ENTÃO)")
-        tab_else    = self.tab_view.tab("4. Ações (SENÃO)")
-        # --- FIM MELHORIA UX ---
-        
-        # O group original foi removido, cada aba tem o seu.
-        # frm = group(self.sf.body, "Construtor (Gatilho → Condições → Ações → [Senão])", ...)
-
-        # --- ABA 1: GATILHO ---
-        frm_gatilho_group = group(tab_gatilho, "Gatilho",
-                    row=0, padx=0, pady=(0,0), sticky="nsew")
+        frm_gatilho_group = group(
+            self.builder_container,
+            "Gatilho",
+            row=0,
+            col=0,
+            padx=(0, 6),
+            pady=0,
+            sticky="nsew",
+        )
         frm_gatilho_group.grid_columnconfigure(0, weight=1)
 
         self.var_gatilho_tipo = tk.StringVar(value=GATILHOS[1])
@@ -1120,16 +1092,23 @@ def _attach_builder_to_RNBuilder():
         self.var_evento = tk.StringVar(value="Prazo Fatal da Peça atingido")
 
         self.frm_gatilho = ctk.CTkFrame(frm_gatilho_group, fg_color="transparent")
-        self.frm_gatilho.grid(row=1, column=0, sticky="we", padx=6)
+        self.frm_gatilho.grid(row=1, column=0, sticky="nsew", padx=6, pady=(0, 6))
+        self.frm_gatilho.grid_columnconfigure(0, weight=1)
         self._refresh_gatilho_fields()
 
-        # --- ABA 2: CONDIÇÕES ---
-        frm_cond_group = group(tab_conds, "Condições adicionais",
-                    row=0, padx=0, pady=(0,0), sticky="nsew")
+        frm_cond_group = group(
+            self.builder_container,
+            "Condições adicionais",
+            row=0,
+            col=1,
+            padx=6,
+            pady=0,
+            sticky="nsew",
+        )
         frm_cond_group.grid_columnconfigure(0, weight=1)
 
         cond_hdr = ctk.CTkFrame(frm_cond_group, fg_color="transparent")
-        cond_hdr.grid(row=3, column=0, padx=6, pady=(10,2), sticky="w")
+        cond_hdr.grid(row=0, column=0, padx=6, pady=(6, 2), sticky="w")
         ctk.CTkLabel(cond_hdr, text="Condições adicionais:").pack(side="left")
         self.var_conj = tk.StringVar(value="E")
         ctk.CTkRadioButton(cond_hdr, text="Todas (E)", variable=self.var_conj, value="E",
@@ -1138,36 +1117,43 @@ def _attach_builder_to_RNBuilder():
                            command=self._update_preview).pack(side="left")
 
         self.frm_conds = ctk.CTkFrame(frm_cond_group, fg_color="transparent")
-        self.frm_conds.grid(row=4, column=0, sticky="we")
+        self.frm_conds.grid(row=1, column=0, sticky="nsew", padx=6)
+        self.frm_conds.grid_columnconfigure(0, weight=1)
         self.cond_rows = []
 
         cond_btnbar = ctk.CTkFrame(frm_cond_group, fg_color="transparent")
-        cond_btnbar.grid(row=5, column=0, padx=6, pady=2, sticky="w")
+        cond_btnbar.grid(row=2, column=0, padx=6, pady=(4, 6), sticky="w")
         ctk.CTkButton(cond_btnbar, text="+ Adicionar condição", command=self._add_cond, width=180)\
             .pack(side="left", padx=(0,6))
         ctk.CTkButton(cond_btnbar, text="Limpar condições", command=self._clear_conditions, width=160)\
             .pack(side="left")
 
-        # --- ABA 3: AÇÕES (ENTÃO) ---
-        frm_acao_group = group(tab_acoes, "Ações (então) e Ações Frequentes",
-                    row=0, padx=0, pady=(0,0), sticky="nsew")
+        frm_acao_group = group(
+            self.builder_container,
+            "Ações (então) e Ações Frequentes",
+            row=0,
+            col=2,
+            padx=(6, 0),
+            pady=0,
+            sticky="nsew",
+        )
         frm_acao_group.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(frm_acao_group, text="Ações (então):").grid(row=7, column=0, padx=6, pady=(10,2), sticky="w")
+        ctk.CTkLabel(frm_acao_group, text="Ações (então):").grid(row=0, column=0, padx=6, pady=(6,2), sticky="w")
         self.frm_acoes = ctk.CTkFrame(frm_acao_group, fg_color="transparent")
-        self.frm_acoes.grid(row=8, column=0, sticky="we")
+        self.frm_acoes.grid(row=1, column=0, sticky="nsew", padx=6)
+        self.frm_acoes.grid_columnconfigure(0, weight=1)
         self.acao_rows = []
 
         acoes_btnbar = ctk.CTkFrame(frm_acao_group, fg_color="transparent")
-        acoes_btnbar.grid(row=9, column=0, padx=6, pady=2, sticky="w")
+        acoes_btnbar.grid(row=2, column=0, padx=6, pady=(4,2), sticky="w")
         ctk.CTkButton(acoes_btnbar, text="+ Adicionar ação", command=self._add_acao, width=160)\
             .pack(side="left", padx=(0,6))
         ctk.CTkButton(acoes_btnbar, text="Limpar ações", command=self._clear_actions, width=140)\
             .pack(side="left")
 
-        # --- AÇÕES FREQUENTES MOVIDAS PARA ABA 3 ---
         freq_bar = ctk.CTkFrame(frm_acao_group, fg_color="transparent")
-        freq_bar.grid(row=10, column=0, padx=6, pady=(8,4), sticky="w")
+        freq_bar.grid(row=3, column=0, padx=6, pady=(8,4), sticky="w")
         ctk.CTkLabel(freq_bar, text="Ações frequentes:").pack(side="left", padx=(0,8))
 
         ctk.CTkLabel(freq_bar, text="Acionando o fluxo de:").pack(side="left")
@@ -1207,27 +1193,6 @@ def _attach_builder_to_RNBuilder():
         ent_resp.bind("<FocusOut>", lambda e: self._update_preview())
         ctk.CTkButton(freq_cond, text="Adicionar", width=110, command=self._insert_frequent_condition).pack(side="left")
 
-        # --- MELHORIA UX: Botões de encerramento removidos (agora é Ação nativa) ---
-        # freq_close = ctk.CTkFrame(frm, fg_color="transparent")
-        # freq_close.grid(row=13, column=0, padx=6, pady=(2,6), sticky="w")
-        # ...
-
-        # --- ABA 4: SENÃO ---
-        frm_else_group = group(tab_else, "Ações do 'Senão' (opcional)",
-                    row=0, padx=0, pady=(0,0), sticky="nsew")
-        frm_else_group.grid_columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(frm_else_group, text="Ações do 'Senão' (opcional):").grid(row=14, column=0, padx=6, pady=(10,2), sticky="w")
-        self.frm_else = ctk.CTkFrame(frm_else_group, fg_color="transparent")
-        self.frm_else.grid(row=15, column=0, sticky="we")
-        self.else_rows = []
-
-        else_btnbar = ctk.CTkFrame(frm_else_group, fg_color="transparent")
-        else_btnbar.grid(row=16, column=0, padx=6, pady=2, sticky="w")
-        ctk.CTkButton(else_btnbar, text="Copiar ações → 'Senão'", command=self._copy_actions_to_else, width=220)\
-            .pack(side="left", padx=(0,6))
-        ctk.CTkButton(else_btnbar, text="Limpar 'Senão'", command=self._clear_else, width=140).pack(side="left")
-
         for v in (
             self.var_gatilho_tipo, self.var_obj, self.var_tarefa_ctx, self.var_campo,
             self.var_resposta, self.var_tarefa_done, self.var_evento, self.var_conj
@@ -1264,12 +1229,6 @@ def _attach_builder_to_RNBuilder():
         if (not confirm) or messagebox.askyesno("Limpar ações", "Remover todas as ações?"):
             self._destroy_rows(self.acao_rows); self._update_preview()
 
-    def _clear_else(self: 'RNBuilder', *, confirm=True):
-        if not getattr(self, 'else_rows', []):
-            return
-        if (not confirm) or messagebox.askyesno("Limpar 'Senão'", "Remover todas as ações do 'Senão'?"):
-            self._destroy_rows(self.else_rows); self._update_preview()
-
     def _add_cond(self: 'RNBuilder'):
         row = LinhaCondicao(self.frm_conds, on_change=self._update_preview,
                             on_remove=lambda r: self.cond_rows.remove(r) if r in self.cond_rows else None)
@@ -1287,30 +1246,6 @@ def _attach_builder_to_RNBuilder():
                         row_list_key="acao_rows") # Passando a chave da lista
         self.acao_rows.append(row)
         row.pack(anchor="w", pady=2)
-        self._update_preview()
-
-    def _add_else_acao(self: 'RNBuilder'):
-        preset_value = (self.var_resp_preset_free.get().strip() if self.var_resp_preset.get() == "Texto livre…"
-                        else self.var_resp_preset.get())
-        row = LinhaAcao(self.frm_else, on_change=self._update_preview,
-                        on_remove=lambda r: self.else_rows.remove(r) if r in self.else_rows else None,
-                        default_resp=preset_value,
-                        default_resp_free=self.var_resp_preset_free.get(),
-                        row_list_key="else_rows") # Passando a chave da lista
-        self.else_rows.append(row)
-        row.pack(anchor="w", pady=2)
-        self._update_preview()
-
-    def _copy_actions_to_else(self: 'RNBuilder'):
-        for a in getattr(self, 'acao_rows', []):
-            r = LinhaAcao(self.frm_else, on_change=self._update_preview,
-                          on_remove=lambda r: self.else_rows.remove(r) if r in self.else_rows else None,
-                          default_resp=(self.var_resp_preset_free.get().strip() if self.var_resp_preset.get() == "Texto livre…" else self.var_resp_preset.get()),
-                          default_resp_free=self.var_resp_preset_free.get(),
-                          row_list_key="else_rows") # Passando a chave da lista
-            r.pack(anchor="w", pady=2)
-            r.from_dict(a.to_dict())
-            self.else_rows.append(r)
         self._update_preview()
 
     def _insert_frequent_flow(self: 'RNBuilder'):
@@ -1365,8 +1300,6 @@ def _attach_builder_to_RNBuilder():
             row.var_op.set("foi respondido com")
             row.var_valor.set(resp)
             self.cond_rows.append(row)
-            # --- MELHORIA UX: Mudar para aba de Condições ---
-            self.tab_view.set("2. Condições (SE)")
             self._update_preview()
         except Exception as e:
             messagebox.showerror("Falha ao inserir condição rápida", str(e))
@@ -1479,11 +1412,8 @@ def _attach_builder_to_RNBuilder():
     RNBuilder._destroy_rows = _destroy_rows
     RNBuilder._clear_conditions = _clear_conditions
     RNBuilder._clear_actions = _clear_actions
-    RNBuilder._clear_else = _clear_else
     RNBuilder._add_cond = _add_cond
     RNBuilder._add_acao = _add_acao
-    RNBuilder._add_else_acao = _add_else_acao
-    RNBuilder._copy_actions_to_else = _copy_actions_to_else
     RNBuilder._insert_frequent_flow = _insert_frequent_flow
     RNBuilder._insert_frequent_return = _insert_frequent_return
     RNBuilder._insert_frequent_condition = _insert_frequent_condition
@@ -1596,13 +1526,19 @@ def _attach_panels_to_RNBuilder():
                 down.configure(state="disabled")
 
     def _refresh_textbox(self: 'RNBuilder'):
-        header = " | ".join(
-            [
-                f"Cliente: {self.var_cliente.get().strip()}" if self.var_cliente.get().strip() else "",
-                f"Área: {self.var_area.get().strip()}" if self.var_area.get().strip() else "",
-                f"Fluxo: {self.var_fluxo.get().strip()}" if self.var_fluxo.get().strip() else "",
-            ]
-        ).strip(" | ")
+        header_parts: list[str] = []
+        try:
+            header_parts.append(f"RN inicial: {int(self.start_idx.get())}")
+        except Exception:
+            pass
+        preset = self.var_resp_preset.get()
+        if preset == "Texto livre…":
+            livre = self.var_resp_preset_free.get().strip()
+            if livre:
+                header_parts.append(f"Responsável padrão: {livre}")
+        elif preset:
+            header_parts.append(f"Responsável padrão: {preset}")
+        header = " | ".join(header_parts)
         content = (header + "\n\n" if header else "") + "\n\n".join(self.rns)
         self.txt.configure(state="normal")
         self.txt.delete("1.0", "end")
@@ -1697,7 +1633,6 @@ def _attach_panels_to_RNBuilder():
             when = self._when_text()
             cond  = self._cond_text()
             acoes = self._acoes_text(getattr(self, 'acao_rows', []))
-            else_part = self._acoes_text(getattr(self, 'else_rows', []))
 
             # Referência ao prev_box da PARTE 6
             self.prev_box.configure(state="normal")
@@ -1714,10 +1649,6 @@ def _attach_panels_to_RNBuilder():
 
             if preview:
                 preview += "."
-
-            if else_part:
-                prefix = f" {_t('else_label')}, " if preview else f"{_t('else_label')}, "
-                preview += prefix + else_part + "."
 
             if not preview:
                 preview = ""
@@ -1741,16 +1672,13 @@ def _attach_panels_to_RNBuilder():
         when = self._when_text()
         cond = self._cond_text()
         acoes = self._acoes_text(getattr(self, 'acao_rows', []))
-        else_part = self._acoes_text(getattr(self, 'else_rows', []))
-        if not acoes and not else_part:
-            messagebox.showwarning("Faltam ações", "Adicione pelo menos uma ação (ou no 'Senão').")
+        if not acoes:
+            messagebox.showwarning("Faltam ações", "Adicione pelo menos uma ação.")
             return
         idx = int(self.start_idx.get()) + len(self.rns)
-        rn = _compose_rn(idx, when, cond, acoes, else_txt=(else_part if else_part else None))
+        rn = _compose_rn(idx, when, cond, acoes)
         self.rns.append(rn)
         self._refresh_textbox()
-        # --- MELHORIA UX: Mudar para aba de Gatilho ---
-        self.tab_view.set("1. Gatilho")
 
     def _add_rn_and_prepare_opposite(self: 'RNBuilder'):
         self._add_rn()
@@ -1774,10 +1702,7 @@ def _attach_panels_to_RNBuilder():
         except Exception:
             pass
         self._destroy_rows(getattr(self, 'acao_rows', []))
-        self._destroy_rows(getattr(self, 'else_rows', []))
         self._update_preview()
-        # --- MELHORIA UX: Mudar para aba de Ações ---
-        self.tab_view.set("3. Ações (ENTÃO)")
 
     def _clear_rns(self: 'RNBuilder', *, confirm=True):
         if (not confirm) or messagebox.askyesno("Limpar", "Remover todas as RNs?"):
@@ -1810,8 +1735,7 @@ _attach_panels_to_RNBuilder()
 if __name__ == "__main__":
     try:
         app = RNBuilder()
-        # --- MELHORIA UX: Chamada 'hasattr' atualizada ---
-        if not hasattr(app, 'tab_view'): # Verificando 'tab_view' em vez de 'sf'
+        if not hasattr(app, 'builder_container'):
             app._build_rule()
         if not hasattr(app, 'prev_box'):
             app._build_panels()

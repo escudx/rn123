@@ -1079,10 +1079,15 @@ def _attach_builder_to_RNBuilder():
 
         self.var_gatilho_tipo = tk.StringVar(value=GATILHOS[1])
         gtbar = ctk.CTkFrame(frm_gatilho_group, fg_color="transparent")
-        gtbar.grid(row=0, column=0, padx=6, pady=6, sticky="w")
-        ctk.CTkLabel(gtbar, text="Gatilho:").pack(side="left")
-        ctk.CTkComboBox(gtbar, values=GATILHOS, variable=self.var_gatilho_tipo, width=280,
-                        command=lambda *_: self._refresh_gatilho_fields()).pack(side="left", padx=(6,0))
+        gtbar.grid(row=0, column=0, padx=6, pady=6, sticky="ew")
+        gtbar.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(gtbar, text="Gatilho:").grid(row=0, column=0, sticky="w")
+        ctk.CTkComboBox(
+            gtbar,
+            values=GATILHOS,
+            variable=self.var_gatilho_tipo,
+            command=lambda *_: self._refresh_gatilho_fields(),
+        ).grid(row=0, column=1, sticky="ew", padx=(6, 0))
 
         self.var_obj = tk.StringVar(value="Cadastro ou Pré Cadastro")
         self.var_tarefa_ctx = tk.StringVar(value="Validar Nota Fiscal")
@@ -1108,13 +1113,27 @@ def _attach_builder_to_RNBuilder():
         frm_cond_group.grid_columnconfigure(0, weight=1)
 
         cond_hdr = ctk.CTkFrame(frm_cond_group, fg_color="transparent")
-        cond_hdr.grid(row=0, column=0, padx=6, pady=(6, 2), sticky="w")
-        ctk.CTkLabel(cond_hdr, text="Condições adicionais:").pack(side="left")
+        cond_hdr.grid(row=0, column=0, padx=6, pady=(6, 2), sticky="ew")
+        cond_hdr.grid_columnconfigure(0, weight=1)
+        cond_hdr.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(cond_hdr, text="Condições adicionais:").grid(
+            row=0, column=0, columnspan=2, sticky="w"
+        )
         self.var_conj = tk.StringVar(value="E")
-        ctk.CTkRadioButton(cond_hdr, text="Todas (E)", variable=self.var_conj, value="E",
-                           command=self._update_preview).pack(side="left", padx=(8,6))
-        ctk.CTkRadioButton(cond_hdr, text="Qualquer (OU)", variable=self.var_conj, value="OU",
-                           command=self._update_preview).pack(side="left")
+        ctk.CTkRadioButton(
+            cond_hdr,
+            text="Todas (E)",
+            variable=self.var_conj,
+            value="E",
+            command=self._update_preview,
+        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
+        ctk.CTkRadioButton(
+            cond_hdr,
+            text="Qualquer (OU)",
+            variable=self.var_conj,
+            value="OU",
+            command=self._update_preview,
+        ).grid(row=1, column=1, sticky="w", pady=(4, 0), padx=(12, 0))
 
         self.frm_conds = ctk.CTkFrame(frm_cond_group, fg_color="transparent")
         self.frm_conds.grid(row=1, column=0, sticky="nsew", padx=6)
@@ -1122,11 +1141,19 @@ def _attach_builder_to_RNBuilder():
         self.cond_rows = []
 
         cond_btnbar = ctk.CTkFrame(frm_cond_group, fg_color="transparent")
-        cond_btnbar.grid(row=2, column=0, padx=6, pady=(4, 6), sticky="w")
-        ctk.CTkButton(cond_btnbar, text="+ Adicionar condição", command=self._add_cond, width=180)\
-            .pack(side="left", padx=(0,6))
-        ctk.CTkButton(cond_btnbar, text="Limpar condições", command=self._clear_conditions, width=160)\
-            .pack(side="left")
+        cond_btnbar.grid(row=2, column=0, padx=6, pady=(4, 6), sticky="ew")
+        cond_btnbar.grid_columnconfigure(0, weight=1)
+        cond_btnbar.grid_columnconfigure(1, weight=1)
+        ctk.CTkButton(
+            cond_btnbar,
+            text="+ Adicionar condição",
+            command=self._add_cond,
+        ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        ctk.CTkButton(
+            cond_btnbar,
+            text="Limpar condições",
+            command=self._clear_conditions,
+        ).grid(row=0, column=1, sticky="ew")
 
         frm_acao_group = group(
             self.builder_container,
@@ -1146,52 +1173,102 @@ def _attach_builder_to_RNBuilder():
         self.acao_rows = []
 
         acoes_btnbar = ctk.CTkFrame(frm_acao_group, fg_color="transparent")
-        acoes_btnbar.grid(row=2, column=0, padx=6, pady=(4,2), sticky="w")
-        ctk.CTkButton(acoes_btnbar, text="+ Adicionar ação", command=self._add_acao, width=160)\
-            .pack(side="left", padx=(0,6))
-        ctk.CTkButton(acoes_btnbar, text="Limpar ações", command=self._clear_actions, width=140)\
-            .pack(side="left")
+        acoes_btnbar.grid(row=2, column=0, padx=6, pady=(4, 2), sticky="ew")
+        acoes_btnbar.grid_columnconfigure(0, weight=1)
+        acoes_btnbar.grid_columnconfigure(1, weight=1)
+        ctk.CTkButton(
+            acoes_btnbar,
+            text="+ Adicionar ação",
+            command=self._add_acao,
+        ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        ctk.CTkButton(
+            acoes_btnbar,
+            text="Limpar ações",
+            command=self._clear_actions,
+        ).grid(row=0, column=1, sticky="ew")
 
         freq_bar = ctk.CTkFrame(frm_acao_group, fg_color="transparent")
-        freq_bar.grid(row=3, column=0, padx=6, pady=(8,4), sticky="w")
-        ctk.CTkLabel(freq_bar, text="Ações frequentes:").pack(side="left", padx=(0,8))
-
-        ctk.CTkLabel(freq_bar, text="Acionando o fluxo de:").pack(side="left")
+        freq_bar.grid(row=3, column=0, padx=6, pady=(8, 4), sticky="ew")
+        freq_bar.grid_columnconfigure(0, weight=1)
+        freq_bar.grid_columnconfigure(1, weight=0)
+        ctk.CTkLabel(freq_bar, text="Ações frequentes — Acionar fluxo:").grid(
+            row=0, column=0, columnspan=2, sticky="w"
+        )
         self.var_freq = tk.StringVar(value="Cadastro")
-        ctk.CTkComboBox(freq_bar, values=[
-            "Cadastro","Acordo","Decisão","Réplica","Garantias","Bloqueio",
-            "Penhora","Encerramento","Reativação","Perícias","Obrigações"
-        ], variable=self.var_freq, width=180).pack(side="left", padx=(6,6))
-        ctk.CTkButton(freq_bar, text="Inserir", width=100, command=self._insert_frequent_flow).pack(side="left")
+        flow_combo = ctk.CTkComboBox(
+            freq_bar,
+            values=[
+                "Cadastro",
+                "Acordo",
+                "Decisão",
+                "Réplica",
+                "Garantias",
+                "Bloqueio",
+                "Penhora",
+                "Encerramento",
+                "Reativação",
+                "Perícias",
+                "Obrigações",
+            ],
+            variable=self.var_freq,
+        )
+        flow_combo.grid(row=1, column=0, sticky="ew", pady=(4, 0), padx=(0, 6))
+        ctk.CTkButton(
+            freq_bar,
+            text="Inserir",
+            command=self._insert_frequent_flow,
+        ).grid(row=1, column=1, sticky="ew", pady=(4, 0))
 
         freq_ret = ctk.CTkFrame(frm_acao_group, fg_color="transparent")
-        freq_ret.grid(row=11, column=0, padx=6, pady=(2,4), sticky="w")
-        ctk.CTkLabel(freq_ret, text="Retornar a tarefa:").pack(side="left")
+        freq_ret.grid(row=4, column=0, padx=6, pady=(2, 4), sticky="ew")
+        freq_ret.grid_columnconfigure(0, weight=1)
+        freq_ret.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(freq_ret, text="Retornar a tarefa:").grid(row=0, column=0, columnspan=2, sticky="w")
         self.var_freq_ret = tk.StringVar(value="")
-        cb_ret = ctk.CTkComboBox(freq_ret, values=self._mem_get_tasks(), variable=self.var_freq_ret, width=240)
-        cb_ret.pack(side="left", padx=(6,6))
+        cb_ret = ctk.CTkComboBox(freq_ret, values=self._mem_get_tasks(), variable=self.var_freq_ret)
+        cb_ret.grid(row=1, column=0, sticky="ew", pady=(4, 0), padx=(0, 6))
         self._mem_register_task_combo(cb_ret)
         self._mem_bind_combo_capture(cb_ret, lambda: self.var_freq_ret.get(), bucket="task")
+        btn_ret = ctk.CTkButton(freq_ret, text="Inserir", command=self._insert_frequent_return)
+        btn_ret.grid(row=1, column=1, sticky="ew", pady=(4, 0))
         self.var_freq_ret_restart = tk.BooleanVar(value=True)
-        ctk.CTkCheckBox(freq_ret, text="Reiniciar SLA", variable=self.var_freq_ret_restart,
-                        onvalue=True, offvalue=False, command=self._update_preview).pack(side="left", padx=(0,8))
-        ctk.CTkButton(freq_ret, text="Inserir", width=100, command=self._insert_frequent_return).pack(side="left")
+        ctk.CTkCheckBox(
+            freq_ret,
+            text="Reiniciar SLA",
+            variable=self.var_freq_ret_restart,
+            onvalue=True,
+            offvalue=False,
+            command=self._update_preview,
+        ).grid(row=2, column=0, columnspan=2, sticky="w", pady=(6, 0))
 
         freq_cond = ctk.CTkFrame(frm_acao_group, fg_color="transparent")
-        freq_cond.grid(row=12, column=0, padx=6, pady=(2,4), sticky="w")
-        ctk.CTkLabel(freq_cond, text="Condição rápida (Campo/Resposta):").pack(side="left")
+        freq_cond.grid(row=5, column=0, padx=6, pady=(2, 6), sticky="ew")
+        freq_cond.grid_columnconfigure(0, weight=1)
+        freq_cond.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(freq_cond, text="Condição rápida (Campo / Resposta):").grid(
+            row=0, column=0, columnspan=2, sticky="w"
+        )
+        ctk.CTkLabel(freq_cond, text="Campo:").grid(row=1, column=0, sticky="w", pady=(4, 0))
         self.var_freq_cond_field = tk.StringVar(value="")
-        cb_field = ctk.CTkComboBox(freq_cond, values=self._mem_get_fields(), variable=self.var_freq_cond_field, width=240)
-        cb_field.pack(side="left", padx=(6,6))
+        cb_field = ctk.CTkComboBox(
+            freq_cond,
+            values=self._mem_get_fields(),
+            variable=self.var_freq_cond_field,
+        )
+        cb_field.grid(row=1, column=1, sticky="ew", pady=(4, 0))
         self._mem_register_field_combo(cb_field)
         self._mem_bind_combo_capture(cb_field, lambda: self.var_freq_cond_field.get(), bucket="field")
-        ctk.CTkLabel(freq_cond, text="Resposta:").pack(side="left", padx=(6,0))
+        ctk.CTkLabel(freq_cond, text="Resposta:").grid(row=2, column=0, sticky="w", pady=(6, 0))
         self.var_freq_cond_resp = tk.StringVar(value="")
-        ent_resp = ctk.CTkEntry(freq_cond, textvariable=self.var_freq_cond_resp, width=160)
-        ent_resp.pack(side="left", padx=(6,6))
+        ent_resp = ctk.CTkEntry(freq_cond, textvariable=self.var_freq_cond_resp)
+        ent_resp.grid(row=2, column=1, sticky="ew", pady=(6, 0))
         ent_resp.bind("<Return>", lambda e: self._insert_frequent_condition())
         ent_resp.bind("<FocusOut>", lambda e: self._update_preview())
-        ctk.CTkButton(freq_cond, text="Adicionar", width=110, command=self._insert_frequent_condition).pack(side="left")
+        ctk.CTkButton(
+            freq_cond,
+            text="Adicionar",
+            command=self._insert_frequent_condition,
+        ).grid(row=3, column=0, columnspan=2, sticky="ew", pady=(8, 0))
 
         for v in (
             self.var_gatilho_tipo, self.var_obj, self.var_tarefa_ctx, self.var_campo,
@@ -1313,32 +1390,67 @@ def _attach_builder_to_RNBuilder():
         # canvas, y = _capture_scroll(self)
         for w in self.frm_gatilho.winfo_children():
             w.destroy()
+        for col in range(2):
+            self.frm_gatilho.grid_columnconfigure(col, weight=(0 if col == 0 else 1))
         t = self.var_gatilho_tipo.get()
         if t == "Sempre que inserido novo OBJETO":
-            ctk.CTkLabel(self.frm_gatilho, text="Objeto:").grid(row=0, column=0, padx=4, pady=3, sticky="e")
-            ctk.CTkEntry(self.frm_gatilho, textvariable=self.var_obj, width=320).grid(row=0, column=1, padx=4, pady=3, sticky="w")
+            ctk.CTkLabel(self.frm_gatilho, text="Objeto:").grid(
+                row=0, column=0, padx=(0, 6), pady=3, sticky="w"
+            )
+            ctk.CTkEntry(self.frm_gatilho, textvariable=self.var_obj).grid(
+                row=0, column=1, padx=(0, 0), pady=3, sticky="ew"
+            )
         elif t == "Em TAREFA se CAMPO for RESPOSTA":
-            ctk.CTkLabel(self.frm_gatilho, text="Tarefa:").grid(row=0, column=0, padx=4, pady=3, sticky="e")
-            cb_t = ctk.CTkComboBox(self.frm_gatilho, values=self._mem_get_tasks(), variable=self.var_tarefa_ctx, width=260)
-            cb_t.grid(row=0, column=1, padx=4, pady=3, sticky="w")
-            self._mem_register_task_combo(cb_t); self._mem_bind_combo_capture(cb_t, lambda: self.var_tarefa_ctx.get(), "task")
-            ctk.CTkLabel(self.frm_gatilho, text="Campo:").grid(row=0, column=2, padx=4, pady=3, sticky="e")
-            cb_c = ctk.CTkComboBox(self.frm_gatilho, values=self._mem_get_fields(), variable=self.var_campo, width=220)
-            cb_c.grid(row=0, column=3, padx=4, pady=3, sticky="w")
-            self._mem_register_field_combo(cb_c); self._mem_bind_combo_capture(cb_c, lambda: self.var_campo.get(), "field")
-            ctk.CTkLabel(self.frm_gatilho, text="Resposta:").grid(row=0, column=4, padx=4, pady=3, sticky="e")
-            ent_r = ctk.CTkEntry(self.frm_gatilho, textvariable=self.var_resposta, width=140)
-            ent_r.grid(row=0, column=5, padx=4, pady=3)
-            ent_r.bind("<Return>",   lambda e: self._update_preview())
+            ctk.CTkLabel(self.frm_gatilho, text="Tarefa:").grid(
+                row=0, column=0, padx=(0, 6), pady=3, sticky="w"
+            )
+            cb_t = ctk.CTkComboBox(
+                self.frm_gatilho,
+                values=self._mem_get_tasks(),
+                variable=self.var_tarefa_ctx,
+            )
+            cb_t.grid(row=0, column=1, padx=0, pady=3, sticky="ew")
+            self._mem_register_task_combo(cb_t)
+            self._mem_bind_combo_capture(cb_t, lambda: self.var_tarefa_ctx.get(), "task")
+
+            ctk.CTkLabel(self.frm_gatilho, text="Campo:").grid(
+                row=1, column=0, padx=(0, 6), pady=3, sticky="w"
+            )
+            cb_c = ctk.CTkComboBox(
+                self.frm_gatilho,
+                values=self._mem_get_fields(),
+                variable=self.var_campo,
+            )
+            cb_c.grid(row=1, column=1, padx=0, pady=3, sticky="ew")
+            self._mem_register_field_combo(cb_c)
+            self._mem_bind_combo_capture(cb_c, lambda: self.var_campo.get(), "field")
+
+            ctk.CTkLabel(self.frm_gatilho, text="Resposta:").grid(
+                row=2, column=0, padx=(0, 6), pady=3, sticky="w"
+            )
+            ent_r = ctk.CTkEntry(self.frm_gatilho, textvariable=self.var_resposta)
+            ent_r.grid(row=2, column=1, padx=0, pady=3, sticky="ew")
+            ent_r.bind("<Return>", lambda e: self._update_preview())
             ent_r.bind("<FocusOut>", lambda e: self._update_preview())
         elif t == "Concluída TAREFA":
-            ctk.CTkLabel(self.frm_gatilho, text="Tarefa concluída:").grid(row=0, column=0, padx=4, pady=3, sticky="e")
-            cb_done = ctk.CTkComboBox(self.frm_gatilho, values=self._mem_get_tasks(), variable=self.var_tarefa_done, width=420)
-            cb_done.grid(row=0, column=1, padx=4, pady=3, columnspan=3, sticky="w")
-            self._mem_register_task_combo(cb_done); self._mem_bind_combo_capture(cb_done, lambda: self.var_tarefa_done.get(), "task")
+            ctk.CTkLabel(self.frm_gatilho, text="Tarefa concluída:").grid(
+                row=0, column=0, padx=(0, 6), pady=3, sticky="w"
+            )
+            cb_done = ctk.CTkComboBox(
+                self.frm_gatilho,
+                values=self._mem_get_tasks(),
+                variable=self.var_tarefa_done,
+            )
+            cb_done.grid(row=0, column=1, padx=0, pady=3, sticky="ew")
+            self._mem_register_task_combo(cb_done)
+            self._mem_bind_combo_capture(cb_done, lambda: self.var_tarefa_done.get(), "task")
         else:
-            ctk.CTkLabel(self.frm_gatilho, text="Evento:").grid(row=0, column=0, padx=4, pady=3, sticky="e")
-            ctk.CTkEntry(self.frm_gatilho, textvariable=self.var_evento, width=420).grid(row=0, column=1, padx=4, pady=3, columnspan=3, sticky="w")
+            ctk.CTkLabel(self.frm_gatilho, text="Evento:").grid(
+                row=0, column=0, padx=(0, 6), pady=3, sticky="w"
+            )
+            ctk.CTkEntry(self.frm_gatilho, textvariable=self.var_evento).grid(
+                row=0, column=1, padx=0, pady=3, sticky="ew"
+            )
         self.after(0, self._update_preview)
         # REMOVIDO: ScrollFrame não é mais necessário
         # _restore_scroll(canvas, y, self)

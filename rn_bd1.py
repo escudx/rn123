@@ -249,6 +249,11 @@ def group(parent, text, row, col=0, padx=10, pady=(10,6), sticky="we"):
     inner.grid_rowconfigure(1, weight=1)
     return inner
 
+
+def scrollable_body(widget: ctk.CTkScrollableFrame):
+    """Retorna o corpo real de um CTkScrollableFrame, compatível com versões antigas."""
+    return getattr(widget, "scrollable_frame", getattr(widget, "_scrollable_frame", widget))
+
 # REMOVIDO: ScrollFrame não é mais necessário com o CTkTabview
 # def _capture_scroll(widget):
 #     canvas = None
@@ -716,7 +721,8 @@ class RNBuilder(ctk.CTk):
         self.title("RN Builder — Montador de Regras")
         self.geometry("1280x860")
         self.minsize(1120, 800)
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         self.rns: list[str] = []
@@ -734,6 +740,13 @@ class RNBuilder(ctk.CTk):
         self._lang_var = tk.StringVar(value=("Português" if get_lang() == "pt" else "Español"))
 
         self._build_header()
+
+        self.content = ctk.CTkFrame(self, fg_color="transparent")
+        self.content.grid(row=1, column=0, sticky="nsew")
+        self.content.grid_columnconfigure(0, weight=1)
+        self.content.grid_rowconfigure(0, weight=3)
+        self.content.grid_rowconfigure(1, weight=2, minsize=280)
+
         self._bind_shortcuts()
 
     # Memória de combos
@@ -1121,8 +1134,12 @@ class RNBuilder(ctk.CTk):
 
 def _attach_builder_to_RNBuilder():
     def _build_rule(self: 'RNBuilder'):
-        self.builder_container = ctk.CTkFrame(self)
-        self.builder_container.grid(row=1, column=0, sticky="nsew", padx=10, pady=6)
+        parent = getattr(self, "content", self)
+        self.builder_scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
+        self.builder_scroll.grid(row=0, column=0, sticky="nsew", padx=10, pady=6)
+        self.builder_scroll.grid_columnconfigure(0, weight=1)
+
+        self.builder_container = scrollable_body(self.builder_scroll)
         for col in range(3):
             self.builder_container.grid_columnconfigure(col, weight=1, uniform="builder")
         self.builder_container.grid_rowconfigure(0, weight=1)
@@ -1196,13 +1213,10 @@ def _attach_builder_to_RNBuilder():
             command=self._update_preview,
         ).grid(row=1, column=1, sticky="w", pady=(4, 0), padx=(12, 0))
 
-        def _scrollable_body(widget: ctk.CTkScrollableFrame):
-            return getattr(widget, "scrollable_frame", getattr(widget, "_scrollable_frame", widget))
-
-        self.frm_conds = ctk.CTkScrollableFrame(frm_cond_group, fg_color="transparent", height=360)
+        self.frm_conds = ctk.CTkScrollableFrame(frm_cond_group, fg_color="transparent", height=300)
         self.frm_conds.grid(row=1, column=0, sticky="nsew", padx=6)
         self.frm_conds.grid_columnconfigure(0, weight=1)
-        self.frm_conds_body = _scrollable_body(self.frm_conds)
+        self.frm_conds_body = scrollable_body(self.frm_conds)
         self.frm_conds_body.grid_columnconfigure(0, weight=1)
         self.cond_rows = []
 
@@ -1233,10 +1247,10 @@ def _attach_builder_to_RNBuilder():
         frm_acao_group.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(frm_acao_group, text="Ações (então):").grid(row=0, column=0, padx=6, pady=(6,2), sticky="w")
-        self.frm_acoes = ctk.CTkScrollableFrame(frm_acao_group, fg_color="transparent", height=360)
+        self.frm_acoes = ctk.CTkScrollableFrame(frm_acao_group, fg_color="transparent", height=300)
         self.frm_acoes.grid(row=1, column=0, sticky="nsew", padx=6)
         self.frm_acoes.grid_columnconfigure(0, weight=1)
-        self.frm_acoes_body = _scrollable_body(self.frm_acoes)
+        self.frm_acoes_body = scrollable_body(self.frm_acoes)
         self.frm_acoes_body.grid_columnconfigure(0, weight=1)
         self.acao_rows = []
 
@@ -1685,8 +1699,9 @@ _attach_builder_to_RNBuilder()
 
 def _attach_panels_to_RNBuilder():
     def _build_panels(self: 'RNBuilder'):
-        container = ctk.CTkFrame(self)
-        container.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        parent = getattr(self, "content", self)
+        container = ctk.CTkFrame(parent)
+        container.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
         container.grid_columnconfigure(0, weight=1)
         container.grid_columnconfigure(1, weight=3)
         container.grid_rowconfigure(0, weight=1)
@@ -1699,7 +1714,7 @@ def _attach_panels_to_RNBuilder():
                       command=self._add_rn_and_prepare_opposite, width=300).pack(side="left", padx=(0, 6))
         ctk.CTkButton(left_btnbar, text="Limpar pré-visualização", command=self._clear_preview, width=200).pack(side="left")
 
-        self.prev_box = SafeCTkTextbox(left, height=150)
+        self.prev_box = SafeCTkTextbox(left, height=200)
         self.prev_box.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
 
         try:
@@ -1718,11 +1733,11 @@ def _attach_panels_to_RNBuilder():
         ctk.CTkButton(right_btnbar, text="Salvar .txt", command=self._save_txt, width=110).pack(side="left", padx=(0, 6))
         ctk.CTkButton(right_btnbar, text="Limpar RNs", command=lambda: self._clear_rns(confirm=True), width=110).pack(side="left")
 
-        self.rn_mgr = ctk.CTkScrollableFrame(right, height=320)
+        self.rn_mgr = ctk.CTkScrollableFrame(right, height=220)
         self.rn_mgr.grid(row=1, column=0, sticky="nsew", padx=0, pady=(0, 6))
         self.rn_mgr.grid_columnconfigure(0, weight=1)
 
-        self.txt = ctk.CTkTextbox(right, height=220)
+        self.txt = ctk.CTkTextbox(right, height=200)
         self.txt.grid(row=2, column=0, sticky="nsew", padx=0, pady=0)
         try:
             self.txt.configure(wrap="word")

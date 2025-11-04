@@ -1196,10 +1196,13 @@ def _attach_builder_to_RNBuilder():
             command=self._update_preview,
         ).grid(row=1, column=1, sticky="w", pady=(4, 0), padx=(12, 0))
 
+        def _scrollable_body(widget: ctk.CTkScrollableFrame):
+            return getattr(widget, "scrollable_frame", getattr(widget, "_scrollable_frame", widget))
+
         self.frm_conds = ctk.CTkScrollableFrame(frm_cond_group, fg_color="transparent", height=360)
         self.frm_conds.grid(row=1, column=0, sticky="nsew", padx=6)
         self.frm_conds.grid_columnconfigure(0, weight=1)
-        self.frm_conds_body = self.frm_conds.scrollable_frame
+        self.frm_conds_body = _scrollable_body(self.frm_conds)
         self.frm_conds_body.grid_columnconfigure(0, weight=1)
         self.cond_rows = []
 
@@ -1233,7 +1236,7 @@ def _attach_builder_to_RNBuilder():
         self.frm_acoes = ctk.CTkScrollableFrame(frm_acao_group, fg_color="transparent", height=360)
         self.frm_acoes.grid(row=1, column=0, sticky="nsew", padx=6)
         self.frm_acoes.grid_columnconfigure(0, weight=1)
-        self.frm_acoes_body = self.frm_acoes.scrollable_frame
+        self.frm_acoes_body = _scrollable_body(self.frm_acoes)
         self.frm_acoes_body.grid_columnconfigure(0, weight=1)
         self.acao_rows = []
 

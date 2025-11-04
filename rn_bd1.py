@@ -10,6 +10,20 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import customtkinter as ctk
 
+
+class SafeCTkTextbox(ctk.CTkTextbox):
+    """CTkTextbox that ignores unsupported tag font options."""
+
+    _FORBIDDEN_TAG_OPTIONS = {"font", "ctk_font"}
+
+    def tag_config(self, tagName, **kwargs):  # noqa: N802 (Tkinter camelCase)
+        cleaned = {k: v for k, v in kwargs.items() if k not in self._FORBIDDEN_TAG_OPTIONS}
+        return super().tag_config(tagName, **cleaned)
+
+    def tag_configure(self, tagName, **kwargs):  # noqa: N802 (Tkinter camelCase)
+        cleaned = {k: v for k, v in kwargs.items() if k not in self._FORBIDDEN_TAG_OPTIONS}
+        return super().tag_configure(tagName, **cleaned)
+
 # =========================
 #  Captura global de erros
 # =========================
@@ -1504,7 +1518,7 @@ def _attach_panels_to_RNBuilder():
                       command=self._add_rn_and_prepare_opposite, width=300).pack(side="left", padx=(0, 6))
         ctk.CTkButton(left_btnbar, text="Limpar pré-visualização", command=self._clear_preview, width=200).pack(side="left")
 
-        self.prev_box = ctk.CTkTextbox(left, height=150)
+        self.prev_box = SafeCTkTextbox(left, height=150)
         self.prev_box.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
 
         try:

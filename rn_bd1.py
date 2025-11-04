@@ -331,25 +331,27 @@ class LinhaCondicao(ctk.CTkFrame):
         self.var_op = tk.StringVar(value=OPERADORES[0])
         self.var_valor = tk.StringVar()
 
-        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=0)
 
-        ctk.CTkLabel(self, text="Campo:").grid(row=0, column=0, sticky="w", padx=4, pady=(2, 0))
-        ctk.CTkEntry(self, textvariable=self.var_campo).grid(row=1, column=0, sticky="ew", padx=4, pady=(0, 6))
+        ctk.CTkLabel(self, text="Campo:").grid(row=0, column=0, sticky="w", padx=(4, 6), pady=(4, 2))
+        ctk.CTkEntry(self, textvariable=self.var_campo).grid(row=0, column=1, sticky="ew", padx=(0, 4), pady=(4, 2))
 
-        ctk.CTkLabel(self, text="Operador:").grid(row=2, column=0, sticky="w", padx=4, pady=(0, 0))
+        ctk.CTkLabel(self, text="Operador:").grid(row=1, column=0, sticky="w", padx=(4, 6), pady=(0, 2))
         ctk.CTkComboBox(
             self,
             values=OPERADORES,
             variable=self.var_op,
             command=lambda *_: self.on_change(),
-        ).grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 6))
+        ).grid(row=1, column=1, sticky="ew", padx=(0, 4), pady=(0, 2))
 
-        ctk.CTkLabel(self, text="Valor / Resposta:").grid(row=4, column=0, sticky="w", padx=4, pady=(0, 0))
-        ctk.CTkEntry(self, textvariable=self.var_valor).grid(row=5, column=0, sticky="ew", padx=4, pady=(0, 6))
+        ctk.CTkLabel(self, text="Valor / Resposta:").grid(row=2, column=0, sticky="w", padx=(4, 6), pady=(0, 2))
+        ctk.CTkEntry(self, textvariable=self.var_valor).grid(row=2, column=1, sticky="ew", padx=(0, 4), pady=(0, 4))
 
         # --- MELHORIA UX: Botões de reordenar ---
         btn_frame = ctk.CTkFrame(self, fg_color="transparent")
-        btn_frame.grid(row=6, column=0, sticky="w", padx=4, pady=(0, 6))
+        btn_frame.grid(row=0, column=2, rowspan=3, sticky="ne", padx=(0, 4), pady=(4, 4))
 
         app = self.winfo_toplevel()
         ctk.CTkButton(
@@ -357,14 +359,14 @@ class LinhaCondicao(ctk.CTkFrame):
             text="↑",
             width=28,
             command=lambda: app._move_row(self, -1, app.cond_rows, app.frm_conds_body),
-        ).pack(side="left", padx=(0, 2))
+        ).pack(pady=(0, 2))
         ctk.CTkButton(
             btn_frame,
             text="↓",
             width=28,
             command=lambda: app._move_row(self, 1, app.cond_rows, app.frm_conds_body),
-        ).pack(side="left", padx=(0, 4))
-        ctk.CTkButton(btn_frame, text="Remover", command=self._remove, width=90).pack(side="left")
+        ).pack(pady=(0, 4))
+        ctk.CTkButton(btn_frame, text="Remover", command=self._remove, width=80).pack()
         # --- FIM MELHORIA UX ---
 
         for v in (self.var_campo, self.var_op, self.var_valor):
@@ -426,9 +428,11 @@ class LinhaAcao(ctk.CTkFrame):
         self.var_ret_tarefa = tk.StringVar()
         self.var_ret_restart = tk.BooleanVar(value=True)
 
-        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=0)
 
-        ctk.CTkLabel(self, text="Tipo de ação:").grid(row=0, column=0, sticky="w", padx=4, pady=(2, 0))
+        ctk.CTkLabel(self, text="Tipo de ação:").grid(row=0, column=0, sticky="w", padx=(4, 6), pady=(4, 2))
         ctk.CTkComboBox(
             self,
             values=[
@@ -442,15 +446,16 @@ class LinhaAcao(ctk.CTkFrame):
             ],
             variable=self.var_tipo,
             command=lambda *_: self._refresh(),
-        ).grid(row=1, column=0, sticky="ew", padx=4, pady=(0, 6))
+        ).grid(row=0, column=1, sticky="ew", padx=(0, 4), pady=(4, 2))
 
         self.frm_dyn = ctk.CTkFrame(self, fg_color="transparent")
-        self.frm_dyn.grid(row=2, column=0, sticky="ew", padx=4, pady=(0, 4))
-        self.frm_dyn.grid_columnconfigure(0, weight=1)
+        self.frm_dyn.grid(row=1, column=0, columnspan=2, sticky="ew", padx=(4, 4), pady=(0, 4))
+        self.frm_dyn.grid_columnconfigure(0, weight=0)
+        self.frm_dyn.grid_columnconfigure(1, weight=1)
 
         # --- MELHORIA UX: Botões de reordenar ---
         btn_frame = ctk.CTkFrame(self, fg_color="transparent")
-        btn_frame.grid(row=3, column=0, sticky="w", padx=4, pady=(0, 6))
+        btn_frame.grid(row=0, column=2, rowspan=2, sticky="ne", padx=(0, 4), pady=(4, 4))
 
         app = self.winfo_toplevel()
         # Pega a lista de ações correspondente no app (ex.: app.acao_rows)
@@ -462,14 +467,14 @@ class LinhaAcao(ctk.CTkFrame):
             text="↑",
             width=28,
             command=lambda: app._move_row(self, -1, row_list, frame_parent),
-        ).pack(side="left", padx=(0, 2))
+        ).pack(pady=(0, 2))
         ctk.CTkButton(
             btn_frame,
             text="↓",
             width=28,
             command=lambda: app._move_row(self, 1, row_list, frame_parent),
-        ).pack(side="left", padx=(0, 4))
-        ctk.CTkButton(btn_frame, text="Remover", command=self._remove, width=90).pack(side="left")
+        ).pack(pady=(0, 4))
+        ctk.CTkButton(btn_frame, text="Remover", command=self._remove, width=80).pack()
         # --- FIM MELHORIA UX ---
 
         self._refresh()
@@ -511,23 +516,27 @@ class LinhaAcao(ctk.CTkFrame):
 
         if t == "Acionar Tarefa":
             row = 0
-            ctk.CTkLabel(self.frm_dyn, text="Tarefa:").grid(row=row, column=0, sticky="w", pady=(0, 0))
-            row += 1
+            ctk.CTkLabel(self.frm_dyn, text="Tarefa:").grid(row=row, column=0, sticky="w", pady=(0, 2))
             cb_tarefa = ctk.CTkComboBox(self.frm_dyn, values=self._app()._mem_get_tasks(), variable=self.var_tarefa)
-            cb_tarefa.grid(row=row, column=0, sticky="ew", pady=(0, 6))
+            cb_tarefa.grid(row=row, column=1, sticky="ew", pady=(0, 2))
             self._register_task_combo(cb_tarefa, lambda: self.var_tarefa.get())
             row += 1
 
-            ctk.CTkLabel(self.frm_dyn, text="Responsável:").grid(row=row, column=0, sticky="w")
-            row += 1
+            ctk.CTkLabel(self.frm_dyn, text="Responsável:").grid(row=row, column=0, sticky="w", pady=(2, 2))
             cb_resp = ctk.CTkComboBox(self.frm_dyn, values=RESPONSAVEIS, variable=self.var_resp)
-            cb_resp.grid(row=row, column=0, sticky="ew", pady=(0, 4))
+            cb_resp.grid(row=row, column=1, sticky="ew", pady=(2, 2))
             row += 1
-            self.entry_resp_livre = ctk.CTkEntry(self.frm_dyn, textvariable=self.var_resp_livre)
+
+            resp_row = row
+            self.entry_resp_livre = ctk.CTkEntry(
+                self.frm_dyn,
+                textvariable=self.var_resp_livre,
+                placeholder_text="Responsável (texto livre)",
+            )
 
             def _toggle_resp(*_):
                 if self.var_resp.get() == "Texto livre…":
-                    self.entry_resp_livre.grid(row=row, column=0, sticky="ew", pady=(0, 6))
+                    self.entry_resp_livre.grid(row=resp_row, column=1, sticky="ew", pady=(0, 2))
                 else:
                     self.var_resp_livre.set("")
                     self.entry_resp_livre.grid_forget()
@@ -535,19 +544,22 @@ class LinhaAcao(ctk.CTkFrame):
 
             cb_resp.configure(command=_toggle_resp)
             _toggle_resp()
-            if self.entry_resp_livre.winfo_ismapped():
-                row += 1
+            row = resp_row + 1 if self.entry_resp_livre.winfo_ismapped() else resp_row
 
-            ctk.CTkLabel(self.frm_dyn, text="Tipo de SLA:").grid(row=row, column=0, sticky="w")
-            row += 1
+            ctk.CTkLabel(self.frm_dyn, text="Tipo de SLA:").grid(row=row, column=0, sticky="w", pady=(2, 2))
             cb_sla = ctk.CTkComboBox(self.frm_dyn, values=SLA_TIPOS, variable=self.var_sla_tipo)
-            cb_sla.grid(row=row, column=0, sticky="ew", pady=(0, 4))
+            cb_sla.grid(row=row, column=1, sticky="ew", pady=(2, 2))
             row += 1
 
-            ctk.CTkLabel(self.frm_dyn, text="Dias:").grid(row=row, column=0, sticky="w")
-            row += 1
-            IntSpin(self.frm_dyn, from_=0, to=365, variable=self.var_sla_dias, width=120, on_change=self.on_change)\
-                .grid(row=row, column=0, sticky="w", pady=(0, 4))
+            ctk.CTkLabel(self.frm_dyn, text="Dias:").grid(row=row, column=0, sticky="w", pady=(2, 2))
+            IntSpin(
+                self.frm_dyn,
+                from_=0,
+                to=365,
+                variable=self.var_sla_dias,
+                width=120,
+                on_change=self.on_change,
+            ).grid(row=row, column=1, sticky="w", pady=(2, 2))
             row += 1
 
             self.chk_feriados = ctk.CTkCheckBox(
@@ -558,9 +570,10 @@ class LinhaAcao(ctk.CTkFrame):
                 offvalue=False,
                 command=self.on_change,
             )
-            self.chk_feriados.grid(row=row, column=0, sticky="w", pady=(0, 4))
+            self.chk_feriados.grid(row=row, column=1, sticky="w", pady=(2, 2))
             row += 1
 
+            marco_row = row
             self.lbl_marco = ctk.CTkLabel(self.frm_dyn, text="Campo de Data:")
             cb_marco = ctk.CTkComboBox(self.frm_dyn, values=self._app()._mem_get_fields(), variable=self.var_sla_marco)
 
@@ -573,8 +586,8 @@ class LinhaAcao(ctk.CTkFrame):
                 except Exception:
                     pass
                 if needs_marco:
-                    self.lbl_marco.grid(row=row, column=0, sticky="w")
-                    cb_marco.grid(row=row + 1, column=0, sticky="ew", pady=(0, 4))
+                    self.lbl_marco.grid(row=marco_row, column=0, sticky="w", pady=(2, 2))
+                    cb_marco.grid(row=marco_row, column=1, sticky="ew", pady=(2, 2))
                     self._register_field_combo(cb_marco, lambda: self.var_sla_marco.get())
                 else:
                     self.lbl_marco.grid_forget()
@@ -583,21 +596,20 @@ class LinhaAcao(ctk.CTkFrame):
 
             cb_sla.configure(command=_apply_sla_visibility)
             _apply_sla_visibility()
-            if cb_marco.winfo_ismapped():
-                row += 2
+            row = marco_row + 1 if cb_marco.winfo_ismapped() else marco_row
 
         elif t == "Atualizar Status":
-            ctk.CTkLabel(self.frm_dyn, text="Status:").grid(row=0, column=0, sticky="w")
-            ctk.CTkEntry(self.frm_dyn, textvariable=self.var_status).grid(row=1, column=0, sticky="ew", pady=(0, 4))
+            ctk.CTkLabel(self.frm_dyn, text="Status:").grid(row=0, column=0, sticky="w", pady=(0, 2))
+            ctk.CTkEntry(self.frm_dyn, textvariable=self.var_status).grid(row=0, column=1, sticky="ew", pady=(0, 2))
 
         elif t == "Acionar Fluxo":
-            ctk.CTkLabel(self.frm_dyn, text="Fluxo:").grid(row=0, column=0, sticky="w")
-            ctk.CTkEntry(self.frm_dyn, textvariable=self.var_fluxo).grid(row=1, column=0, sticky="ew", pady=(0, 4))
+            ctk.CTkLabel(self.frm_dyn, text="Fluxo:").grid(row=0, column=0, sticky="w", pady=(0, 2))
+            ctk.CTkEntry(self.frm_dyn, textvariable=self.var_fluxo).grid(row=0, column=1, sticky="ew", pady=(0, 2))
 
         elif t == "Retornar a Tarefa":
-            ctk.CTkLabel(self.frm_dyn, text="Retornar a tarefa:").grid(row=0, column=0, sticky="w")
+            ctk.CTkLabel(self.frm_dyn, text="Retornar a tarefa:").grid(row=0, column=0, sticky="w", pady=(0, 2))
             cb_ret = ctk.CTkComboBox(self.frm_dyn, values=self._app()._mem_get_tasks(), variable=self.var_ret_tarefa)
-            cb_ret.grid(row=1, column=0, sticky="ew", pady=(0, 4))
+            cb_ret.grid(row=0, column=1, sticky="ew", pady=(0, 2))
             self._register_task_combo(cb_ret, lambda: self.var_ret_tarefa.get())
             ctk.CTkCheckBox(
                 self.frm_dyn,
@@ -606,15 +618,15 @@ class LinhaAcao(ctk.CTkFrame):
                 onvalue=True,
                 offvalue=False,
                 command=self.on_change,
-            ).grid(row=2, column=0, sticky="w", pady=(0, 4))
+            ).grid(row=1, column=1, sticky="w", pady=(2, 2))
 
         # --- MELHORIA UX: Novo tipo de ação ---
         elif t.startswith("Encerrar Fluxo"):
             pass # Não precisa de widgets adicionais
 
         else: # Texto Livre
-            ctk.CTkLabel(self.frm_dyn, text="Texto:").grid(row=0, column=0, sticky="w")
-            ctk.CTkEntry(self.frm_dyn, textvariable=self.var_texto).grid(row=1, column=0, sticky="ew", pady=(0, 4))
+            ctk.CTkLabel(self.frm_dyn, text="Texto:").grid(row=0, column=0, sticky="w", pady=(0, 2))
+            ctk.CTkEntry(self.frm_dyn, textvariable=self.var_texto).grid(row=0, column=1, sticky="ew", pady=(0, 2))
 
         for v in (
             self.var_tarefa, self.var_resp, self.var_resp_livre, self.var_sla_tipo, self.var_sla_dias,
@@ -744,8 +756,10 @@ class RNBuilder(ctk.CTk):
         self.content = ctk.CTkFrame(self, fg_color="transparent")
         self.content.grid(row=1, column=0, sticky="nsew")
         self.content.grid_rowconfigure(0, weight=1)
-        self.content.grid_columnconfigure(0, weight=9, minsize=420)
-        self.content.grid_columnconfigure(1, weight=11, minsize=520)
+        # Coluna 0 (esquerda) agora abriga o construtor; mantém mais largura útil.
+        self.content.grid_columnconfigure(0, weight=11, minsize=520)
+        # Coluna 1 (direita) exibe pré-visualização + lista final.
+        self.content.grid_columnconfigure(1, weight=9, minsize=420)
 
         self._bind_shortcuts()
 
@@ -1136,14 +1150,14 @@ def _attach_builder_to_RNBuilder():
     def _build_rule(self: 'RNBuilder'):
         parent = getattr(self, "content", self)
         self.builder_scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
-        self.builder_scroll.grid(row=0, column=1, sticky="nsew", padx=(6, 10), pady=6)
+        self.builder_scroll.grid(row=0, column=0, sticky="nsew", padx=(10, 6), pady=6)
         self.builder_scroll.grid_columnconfigure(0, weight=1)
 
         self.builder_container = scrollable_body(self.builder_scroll)
         self.builder_container.grid_columnconfigure(0, weight=1)
-        self.builder_container.grid_rowconfigure(0, weight=5)
-        self.builder_container.grid_rowconfigure(1, weight=4)
-        self.builder_container.grid_rowconfigure(2, weight=6)
+        self.builder_container.grid_rowconfigure(0, weight=4)
+        self.builder_container.grid_rowconfigure(1, weight=3)
+        self.builder_container.grid_rowconfigure(2, weight=5)
 
         frm_gatilho_group = group(
             self.builder_container,
@@ -1214,10 +1228,10 @@ def _attach_builder_to_RNBuilder():
             command=self._update_preview,
         ).grid(row=1, column=1, sticky="w", pady=(4, 0), padx=(12, 0))
 
-        self.frm_conds = ctk.CTkScrollableFrame(frm_cond_group, fg_color="transparent", height=240)
-        self.frm_conds.grid(row=1, column=0, sticky="nsew", padx=6)
+        self.frm_conds = ctk.CTkFrame(frm_cond_group, fg_color="transparent")
+        self.frm_conds.grid(row=1, column=0, sticky="ew", padx=6)
         self.frm_conds.grid_columnconfigure(0, weight=1)
-        self.frm_conds_body = scrollable_body(self.frm_conds)
+        self.frm_conds_body = self.frm_conds
         self.frm_conds_body.grid_columnconfigure(0, weight=1)
         self.cond_rows = []
 
@@ -1248,10 +1262,10 @@ def _attach_builder_to_RNBuilder():
         frm_acao_group.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(frm_acao_group, text="Ações (então):").grid(row=0, column=0, padx=6, pady=(6,2), sticky="w")
-        self.frm_acoes = ctk.CTkScrollableFrame(frm_acao_group, fg_color="transparent", height=260)
-        self.frm_acoes.grid(row=1, column=0, sticky="nsew", padx=6)
+        self.frm_acoes = ctk.CTkFrame(frm_acao_group, fg_color="transparent")
+        self.frm_acoes.grid(row=1, column=0, sticky="ew", padx=6)
         self.frm_acoes.grid_columnconfigure(0, weight=1)
-        self.frm_acoes_body = scrollable_body(self.frm_acoes)
+        self.frm_acoes_body = self.frm_acoes
         self.frm_acoes_body.grid_columnconfigure(0, weight=1)
         self.acao_rows = []
 
@@ -1385,14 +1399,14 @@ def _attach_builder_to_RNBuilder():
     def _relayout_cond_rows(self: 'RNBuilder'):
         for idx, widget in enumerate(getattr(self, 'cond_rows', [])):
             try:
-                widget.grid(row=idx, column=0, sticky="ew", padx=0, pady=(0, 8))
+                widget.grid(row=idx, column=0, sticky="ew", padx=0, pady=(0, 6))
             except Exception:
                 pass
 
     def _relayout_acao_rows(self: 'RNBuilder'):
         for idx, widget in enumerate(getattr(self, 'acao_rows', [])):
             try:
-                widget.grid(row=idx, column=0, sticky="ew", padx=0, pady=(0, 10))
+                widget.grid(row=idx, column=0, sticky="ew", padx=0, pady=(0, 6))
             except Exception:
                 pass
 
@@ -1702,7 +1716,7 @@ def _attach_panels_to_RNBuilder():
     def _build_panels(self: 'RNBuilder'):
         parent = getattr(self, "content", self)
         container = ctk.CTkFrame(parent)
-        container.grid(row=0, column=0, sticky="nsew", padx=(10, 6), pady=6)
+        container.grid(row=0, column=1, sticky="nsew", padx=(6, 10), pady=6)
         container.grid_columnconfigure(0, weight=1)
         container.grid_rowconfigure(0, weight=4)
         container.grid_rowconfigure(1, weight=5)
